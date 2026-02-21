@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import createClientForBrowser from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
+import QRCode from "qrcode";
 
-type QRCode = {
+type QRCodeType = {
   id: string;
   unique_code: string;
   created_at: string;
@@ -24,7 +25,7 @@ export default function AdminDashboard({
   qrCodes,
   userEmail,
 }: {
-  qrCodes: QRCode[];
+  qrCodes: QRCodeType[];
   userEmail: string;
 }) {
   const supabase = createClientForBrowser();
@@ -32,6 +33,8 @@ export default function AdminDashboard({
   const [count, setCount] = useState(10);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [selectedQR, setSelectedQR] = useState<QRCodeType | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
   async function handleGenerate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -72,6 +75,35 @@ export default function AdminDashboard({
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  const openQRModal = useCallback(async (qr: QRCodeType) => {
+    setSelectedQR(qr);
+    const url = `${window.location.origin}/qr/${qr.unique_code}`;
+    const dataUrl = await QRCode.toDataURL(url, { width: 400, margin: 2 });
+    setQrDataUrl(dataUrl);
+  }, []);
+
+  function closeQRModal() {
+    setSelectedQR(null);
+    setQrDataUrl(null);
+  }
+
+  function downloadQR() {
+    if (!qrDataUrl || !selectedQR) return;
+    const a = document.createElement("a");
+    a.href = qrDataUrl;
+    a.download = `qr-${selectedQR.unique_code}.png`;
+    a.click();
+  }
+
+  // Close modal on Escape key
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") closeQRModal();
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, []);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -189,6 +221,12 @@ export default function AdminDashboard({
                     >
                       {hasAudio ? "Has audio" : "Empty"}
                     </span>
+                    <button
+                      onClick={() => openQRModal(qr)}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      QR
+                    </button>
                     <a
                       href={`/qr/${qr.unique_code}`}
                       target="_blank"
@@ -203,6 +241,46 @@ export default function AdminDashboard({
           </div>
         )}
       </div>
+      {/* QR Code Modal */}
+      {selectedQR && qrDataUrl && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={closeQRModal}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl p-6 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <img
+                src={qrDataUrl}
+                alt={`QR code for ${selectedQR.unique_code}`}
+                className="mx-auto mb-4 rounded-lg"
+              />
+              <p className="font-mono text-sm text-foreground mb-1">
+                {selectedQR.unique_code}
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                {window.location.origin}/qr/{selectedQR.unique_code}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeQRModal}
+                  className="flex-1 py-2 border border-border rounded-xl text-foreground text-sm font-medium hover:bg-secondary transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={downloadQR}
+                  className="flex-1 py-2 bg-primary text-primary-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  Download
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

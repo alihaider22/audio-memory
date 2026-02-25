@@ -9,7 +9,7 @@ type QRCodeType = {
   id: string;
   unique_code: string;
   created_at: string;
-  audio_memories: { id: string }[] | null;
+  audio_memories: { id: string } | null;
 };
 
 function generateShortCode(): string {
@@ -61,7 +61,7 @@ export default function AdminDashboard({
     const baseUrl = window.location.origin;
     const header = "QR_Code,URL,Created_At,Has_Audio";
     const rows = qrCodes.map((qr) => {
-      const hasAudio = qr.audio_memories && qr.audio_memories.length > 0 ? "Yes" : "No";
+      const hasAudio = !!qr.audio_memories ? "Yes" : "No";
       const date = new Date(qr.created_at).toISOString().split("T")[0];
       return `${qr.unique_code},${baseUrl}/qr/${qr.unique_code},${date},${hasAudio}`;
     });
@@ -112,7 +112,7 @@ export default function AdminDashboard({
 
   const totalCodes = qrCodes.length;
   const withAudio = qrCodes.filter(
-    (qr) => qr.audio_memories && qr.audio_memories.length > 0
+    (qr) => !!qr.audio_memories
   ).length;
 
   return (
@@ -197,7 +197,7 @@ export default function AdminDashboard({
           <div className="divide-y divide-border">
             {qrCodes.map((qr) => {
               const hasAudio =
-                qr.audio_memories && qr.audio_memories.length > 0;
+                !!qr.audio_memories;
               return (
                 <div
                   key={qr.id}

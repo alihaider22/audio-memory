@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, type PointerEvent as ReactPointerEvent } from "react";
 
 export default function AudioPlayer({ audioUrl }: { audioUrl: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -67,23 +67,38 @@ export default function AudioPlayer({ audioUrl }: { audioUrl: string }) {
     setCurrentTime(time);
   }
 
-  function handleVolume(e: React.ChangeEvent<HTMLInputElement>) {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const vol = Number(e.target.value);
-    audio.volume = vol;
-    setVolume(vol);
-    if (vol > 0 && muted) {
-      audio.muted = false;
-      setMuted(false);
-    }
-  }
-
   function toggleMute() {
     const audio = audioRef.current;
     if (!audio) return;
     audio.muted = !muted;
     setMuted(!muted);
+  }
+
+  const volTrackRef = useRef<HTMLDivElement>(null);
+
+  function setVolumeFromPointer(clientX: number) {
+    const track = volTrackRef.current;
+    const audio = audioRef.current;
+    if (!track || !audio) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    audio.volume = ratio;
+    setVolume(ratio);
+    if (ratio > 0 && muted) {
+      audio.muted = false;
+      setMuted(false);
+    }
+  }
+
+  function handleVolPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
+    e.preventDefault();
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setVolumeFromPointer(e.clientX);
+  }
+
+  function handleVolPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
+    if (e.buttons === 0 && e.pressure === 0) return;
+    setVolumeFromPointer(e.clientX);
   }
 
   function formatTime(seconds: number) {
@@ -143,42 +158,6 @@ export default function AudioPlayer({ audioUrl }: { audioUrl: string }) {
           width: 16px; height: 16px; border-radius: 50%;
           background: var(--primary); border: 3px solid var(--card);
           box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-        }
-        .vol-track {
-          -webkit-appearance: none; appearance: none;
-          background: transparent; cursor: pointer;
-        }
-        .vol-track::-webkit-slider-runnable-track {
-          height: 4px; border-radius: 9999px;
-          background: linear-gradient(
-            to right,
-            var(--primary) 0%,
-            var(--primary) var(--vol-progress),
-            var(--muted) var(--vol-progress),
-            var(--muted) 100%
-          );
-        }
-        .vol-track::-moz-range-track {
-          height: 4px; border-radius: 9999px;
-          background: linear-gradient(
-            to right,
-            var(--primary) 0%,
-            var(--primary) var(--vol-progress),
-            var(--muted) var(--vol-progress),
-            var(--muted) 100%
-          );
-        }
-        .vol-track::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          width: 14px; height: 14px; border-radius: 50%;
-          background: var(--primary); border: 2px solid var(--card);
-          margin-top: -5px;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
-        }
-        .vol-track::-moz-range-thumb {
-          width: 14px; height: 14px; border-radius: 50%;
-          background: var(--primary); border: 2px solid var(--card);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.12);
         }
       `}</style>
 
@@ -356,20 +335,23 @@ export default function AudioPlayer({ audioUrl }: { audioUrl: string }) {
                 </svg>
               )}
             </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={muted ? 0 : volume}
-              onChange={handleVolume}
-              className="vol-track flex-1 h-4"
-              style={
-                {
-                  "--vol-progress": `${(muted ? 0 : volume) * 100}%`,
-                } as React.CSSProperties
-              }
-            />
+            <div
+              ref={volTrackRef}
+              onPointerDown={handleVolPointerDown}
+              onPointerMove={handleVolPointerMove}
+              className="flex-1 h-10 flex items-center cursor-pointer touch-none"
+            >
+              <div className="relative w-full h-1 rounded-full bg-muted">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-primary"
+                  style={{ width: `${(muted ? 0 : volume) * 100}%` }}
+                />
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-2 border-card shadow-sm"
+                  style={{ left: `calc(${(muted ? 0 : volume) * 100}% - 8px)` }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

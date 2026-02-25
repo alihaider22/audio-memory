@@ -58,7 +58,7 @@ export default function AdminDashboard({
   }
 
   function exportCSV() {
-    const baseUrl = window.location.origin;
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL!;
     const header = "QR_Code,URL,Created_At,Has_Audio";
     const rows = qrCodes.map((qr) => {
       const hasAudio = !!qr.audio_memories ? "Yes" : "No";
@@ -78,7 +78,7 @@ export default function AdminDashboard({
 
   const openQRModal = useCallback(async (qr: QRCodeType) => {
     setSelectedQR(qr);
-    const url = `${window.location.origin}/qr/${qr.unique_code}`;
+    const url = `${process.env.NEXT_PUBLIC_SITE_URL!}/qr/${qr.unique_code}`;
     const dataUrl = await QRCode.toDataURL(url, { width: 400, margin: 2 });
     setQrDataUrl(dataUrl);
   }, []);
@@ -261,7 +261,7 @@ export default function AdminDashboard({
                 {selectedQR.unique_code}
               </p>
               <p className="text-xs text-muted-foreground mb-4">
-                {window.location.origin}/qr/{selectedQR.unique_code}
+                {process.env.NEXT_PUBLIC_SITE_URL!}/qr/{selectedQR.unique_code}
               </p>
               <div className="flex gap-3">
                 <button

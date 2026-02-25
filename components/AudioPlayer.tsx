@@ -286,70 +286,70 @@ export default function AudioPlayer({ audioUrl }: { audioUrl: string }) {
             </div>
           </div>
 
-          {/* Divider */}
-          <div className="border-t border-border/60 my-4" />
-
-          {/* Volume */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={toggleMute}
-              className="text-muted-foreground hover:text-primary transition-colors shrink-0"
-            >
-              {muted || volume === 0 ? (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+          {/* Volume — hidden on mobile since iOS/Android ignore programmatic volume */}
+          <div className="hidden md:block">
+            <div className="border-t border-border/60 my-4" />
+            <div className="flex items-center gap-3">
+              <button
+                onClick={toggleMute}
+                className="text-muted-foreground hover:text-primary transition-colors shrink-0"
+              >
+                {muted || volume === 0 ? (
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728"
+                    />
+                  </svg>
+                )}
+              </button>
+              <div
+                ref={volTrackRef}
+                onPointerDown={handleVolPointerDown}
+                onPointerMove={handleVolPointerMove}
+                className="flex-1 h-10 flex items-center cursor-pointer touch-none"
+              >
+                <div className="relative w-full h-1 rounded-full bg-muted">
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-primary"
+                    style={{ width: `${(muted ? 0 : volume) * 100}%` }}
                   />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-2 border-card shadow-sm"
+                    style={{ left: `calc(${(muted ? 0 : volume) * 100}% - 8px)` }}
                   />
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728"
-                  />
-                </svg>
-              )}
-            </button>
-            <div
-              ref={volTrackRef}
-              onPointerDown={handleVolPointerDown}
-              onPointerMove={handleVolPointerMove}
-              className="flex-1 h-10 flex items-center cursor-pointer touch-none"
-            >
-              <div className="relative w-full h-1 rounded-full bg-muted">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-primary"
-                  style={{ width: `${(muted ? 0 : volume) * 100}%` }}
-                />
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary border-2 border-card shadow-sm"
-                  style={{ left: `calc(${(muted ? 0 : volume) * 100}% - 8px)` }}
-                />
+                </div>
               </div>
             </div>
           </div>
